@@ -8,28 +8,35 @@ import {
   DB_PORT,
 } from "../constants/secrets.js";
 
-const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
-  host: DB_HOST,
-  port: DB_PORT,
-  dialect: "postgres",
-  quoteIdentifiers: false,
-  dialectOptions: {
-   ssl: {
-    require: true,
-    rejectUnauthorized: false 
-   }
-  },
-  define: {
-    syncOnAssociation: true,
-    timestamps: false,
-    underscored: true,
-    underscoredAll: true,
-    freezeTableName: true,
-  },
-  pool: {
-    acquire: 180000,
-  },
-});
+const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, getOptions());
+
+function getOptions() {
+  let options = {
+    host: DB_HOST,
+    port: DB_PORT,
+    dialect: "postgres",
+    quoteIdentifiers: false,
+    define: {
+      syncOnAssociation: true,
+      timestamps: false,
+      underscored: true,
+      underscoredAll: true,
+      freezeTableName: true,
+    },
+    pool: {
+      acquire: 180000,
+    },
+  };
+  let nodeEnv = process.env.NODE_ENV;
+  let sslConfig = {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  };
+  options.dialectOptions = nodeEnv === "producao" ? sslConfig : {};
+  return options;
+}
 
 sequelize
   .authenticate()
